@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CustomerService } from '../../services/customer.service';
 import { Customer } from '../../models/customer.model';
 
-type FilterTab = 'all' | 'outstanding' | 'paid';
+type FilterTab = 'all' | 'pending' | 'complete' | 'cancel';
 
 @Component({
   selector: 'app-customer-list',
@@ -40,17 +40,24 @@ type FilterTab = 'all' | 'outstanding' | 'paid';
           </button>
           <button
             class="tab-btn"
-            [class.active]="activeTab() === 'outstanding'"
-            (click)="activeTab.set('outstanding')"
+            [class.active]="activeTab() === 'pending'"
+            (click)="activeTab.set('pending')"
           >
-            Outstanding Balance ({{ outstandingCount() }})
+            Pending ({{ pendingCount() }})
           </button>
           <button
             class="tab-btn"
-            [class.active]="activeTab() === 'paid'"
-            (click)="activeTab.set('paid')"
+            [class.active]="activeTab() === 'complete'"
+            (click)="activeTab.set('complete')"
           >
-            Fully Paid ({{ paidCount() }})
+            Complete ({{ completeCount() }})
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="activeTab() === 'cancel'"
+            (click)="activeTab.set('cancel')"
+          >
+            Cancel ({{ cancelCount() }})
           </button>
         </div>
       </div>
@@ -416,9 +423,24 @@ export class CustomerListComponent {
 
   private allCustomers = this.customerService.customers;
 
+  getCustomerStatus(cust: Customer): 'Pending' | 'Complete' | 'Cancel' {
+    const payments = this.customerService.getPaymentsByCustomerId(cust.id);
+    if (payments.length === 0) return 'Pending';
+
+    // If any payment is pending review, prioritize Pending
+    if (payments.some(p => p.status === 'Pending')) {
+      return 'Pending';
+    }
+
+    const latest = payments[0];
+    if (latest.status === 'Cancel') return 'Cancel';
+    return latest.status === 'Complete' ? 'Complete' : 'Pending';
+  }
+
   allCustomersCount = computed(() => this.allCustomers().length);
-  outstandingCount = computed(() => this.allCustomers().filter(c => c.balanceDue > 0).length);
-  paidCount = computed(() => this.allCustomers().filter(c => c.balanceDue === 0).length);
+  pendingCount = computed(() => this.allCustomers().filter(c => this.getCustomerStatus(c) === 'Pending').length);
+  completeCount = computed(() => this.allCustomers().filter(c => this.getCustomerStatus(c) === 'Complete').length);
+  cancelCount = computed(() => this.allCustomers().filter(c => this.getCustomerStatus(c) === 'Cancel').length);
 
   filteredCustomers = computed(() => {
     let list = this.allCustomers();
@@ -435,10 +457,12 @@ export class CustomerListComponent {
       );
     }
 
-    if (tab === 'outstanding') {
-      list = list.filter(c => c.balanceDue > 0);
-    } else if (tab === 'paid') {
-      list = list.filter(c => c.balanceDue === 0);
+    if (tab === 'pending') {
+      list = list.filter(c => this.getCustomerStatus(c) === 'Pending');
+    } else if (tab === 'complete') {
+      list = list.filter(c => this.getCustomerStatus(c) === 'Complete');
+    } else if (tab === 'cancel') {
+      list = list.filter(c => this.getCustomerStatus(c) === 'Cancel');
     }
 
     return list;
@@ -460,14 +484,13 @@ export class CustomerListComponent {
   }
 
   getStatusBadgeClass(cust: Customer): string {
-    if (cust.balanceDue === 0) return 'badge-success';
-    if (cust.totalPaid > 0) return 'badge-warning';
+    const status = this.getCustomerStatus(cust);
+    if (status === 'Complete') return 'badge-success';
+    if (status === 'Pending') return 'badge-warning';
     return 'badge-danger';
   }
 
   getStatusBadgeText(cust: Customer): string {
-    if (cust.balanceDue === 0) return 'PAID';
-    if (cust.totalPaid > 0) return 'PARTIAL';
-    return 'UNPAID';
+    return this.getCustomerStatus(cust).toUpperCase();
   }
 }

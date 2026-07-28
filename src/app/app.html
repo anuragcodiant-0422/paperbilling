@@ -28,19 +28,56 @@
             (customerDeleted)="closeCustomerDetail()"
           ></app-customer-detail>
         } @else {
-          <!-- Admin View 3A: Full Customer List & Management -->
+          <!-- Admin View 3A: Dashboard Header & View Mode Switcher -->
           <div class="dashboard-header">
-            <div class="dh-title">
-              <h1>Customer Billing Administration</h1>
-              <p>Manage all customer profiles, search accounts, inspect payment history, or record transactions.</p>
+            <div class="dh-title-row">
+              <div>
+                <h1>Customer Billing Administration</h1>
+                <p>Manage all customer profiles, inspect global payment records, or record transactions.</p>
+              </div>
+
+              <!-- Admin View Mode Toggle Buttons -->
+              <div class="admin-view-toggle">
+                <button
+                  class="toggle-btn"
+                  [class.active]="adminViewMode() === 'customers'"
+                  (click)="adminViewMode.set('customers')"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  Customers List
+                </button>
+                <button
+                  class="toggle-btn"
+                  [class.active]="adminViewMode() === 'payments'"
+                  (click)="adminViewMode.set('payments')"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                  All Payments List
+                </button>
+              </div>
             </div>
           </div>
 
-          <app-customer-list
-            (selectCustomer)="openCustomerDetail($event)"
-            (recordPaymentFor)="openAddPayment($event)"
-            (openAddCustomerModal)="openAddCustomerModal()"
-          ></app-customer-list>
+          @if (adminViewMode() === 'customers') {
+            <app-customer-list
+              (selectCustomer)="openCustomerDetail($event)"
+              (recordPaymentFor)="openAddPayment($event)"
+              (openAddCustomerModal)="openAddCustomerModal()"
+            ></app-customer-list>
+          } @else {
+            <app-all-payments-list
+              (viewReceipt)="openReceipt($event)"
+              (selectCustomer)="openCustomerDetail($event)"
+            ></app-all-payments-list>
+          }
         }
       }
     </div>

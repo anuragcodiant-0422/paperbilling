@@ -8,6 +8,7 @@ import { AddPaymentModalComponent } from './components/add-payment-modal/add-pay
 import { PaymentReceiptModalComponent } from './components/payment-receipt-modal/payment-receipt-modal.component';
 import { AuthComponent } from './components/auth/auth.component';
 import { CustomerPortalComponent } from './components/customer-portal/customer-portal.component';
+import { AllPaymentsListComponent } from './components/all-payments-list/all-payments-list.component';
 
 import { Customer, Payment } from './models/customer.model';
 import { CustomerService } from './services/customer.service';
@@ -25,7 +26,8 @@ import { AuthService } from './services/auth.service';
     AddPaymentModalComponent,
     PaymentReceiptModalComponent,
     AuthComponent,
-    CustomerPortalComponent
+    CustomerPortalComponent,
+    AllPaymentsListComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
@@ -34,6 +36,7 @@ export class App {
   private customerService = inject(CustomerService);
   auth = inject(AuthService);
 
+  adminViewMode = signal<'customers' | 'payments'>('customers');
   isAddCustomerOpen = signal<boolean>(false);
   selectedCustomer = signal<Customer | undefined>(undefined);
   customerForPayment = signal<Customer | undefined>(undefined);

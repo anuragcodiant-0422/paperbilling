@@ -14,7 +14,15 @@
   margin-bottom: 2rem;
 }
 
-.dh-title h1 {
+.dh-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.dh-title-row h1 {
   font-size: 1.875rem;
   font-weight: 800;
   color: var(--text-main);
@@ -22,8 +30,43 @@
   line-height: 1.25;
 }
 
-.dh-title p {
+.dh-title-row p {
   color: var(--text-muted);
   font-size: 0.95rem;
   margin-top: 0.25rem;
+}
+
+.admin-view-toggle {
+  display: flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.35rem;
+  border-radius: var(--radius-md);
+  gap: 0.35rem;
+}
+
+.admin-view-toggle .toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.6rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.admin-view-toggle .toggle-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-view-toggle .toggle-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
 }

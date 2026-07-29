@@ -93,6 +93,14 @@ import { Customer, Payment } from '../../models/customer.model';
             </tbody>
           </table>
 
+          <!-- Attached Screenshot Proof -->
+          @if (payment()?.screenshotUrl; as ss) {
+            <div class="receipt-ss-box">
+              <span class="info-label">ATTACHED PAYMENT PROOF SCREENSHOT</span>
+              <img [src]="ss" alt="Payment Proof Screenshot" class="receipt-ss-img" />
+            </div>
+          }
+
           <!-- Payment Summary Banner -->
           @if (customer(); as cust) {
             <div class="balance-summary-box">
@@ -320,6 +328,24 @@ import { Customer, Payment } from '../../models/customer.model';
       color: #94a3b8;
       border-top: 1px dashed #cbd5e1;
       padding-top: 1rem;
+    }
+
+    .receipt-ss-box {
+      margin: 1.25rem 0;
+      padding: 1rem;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+
+    .receipt-ss-img {
+      max-width: 100%;
+      max-height: 240px;
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      margin-top: 0.5rem;
     }
   `]
 })

@@ -1,4 +1,4 @@
-import { Component, inject, input, output, computed } from '@angular/core';
+import { Component, inject, input, output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CustomerService } from '../../services/customer.service';
 import { Customer, Payment } from '../../models/customer.model';
@@ -102,6 +102,7 @@ import { Customer, Payment } from '../../models/customer.model';
                     <th>Reference #</th>
                     <th>Notes</th>
                     <th>Amount</th>
+                    <th>Screenshot</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -115,6 +116,16 @@ import { Customer, Payment } from '../../models/customer.model';
                       <td><code>{{ pay.referenceNumber }}</code></td>
                       <td class="notes-col">{{ pay.notes || '-' }}</td>
                       <td class="amount-col text-success">\${{ pay.amount | number:'1.2-2' }}</td>
+                      <td>
+                        @if (pay.screenshotUrl) {
+                          <div class="ss-table-cell" (click)="activeScreenshotUrl.set(pay.screenshotUrl)" title="Click to view payment screenshot">
+                            <img [src]="pay.screenshotUrl" alt="SS" class="ss-thumb" />
+                            <span class="ss-badge">View SS</span>
+                          </div>
+                        } @else {
+                          <span class="no-ss-tag">No SS</span>
+                        }
+                      </td>
                       <td>
                         <div class="action-buttons">
                           <button class="btn btn-secondary btn-sm btn-icon" (click)="viewReceipt.emit(pay)" title="View & Print Receipt">
@@ -153,6 +164,21 @@ import { Customer, Payment } from '../../models/customer.model';
         </div>
       </div>
     </div>
+
+    <!-- Full-screen Screenshot Lightbox Modal -->
+    @if (activeScreenshotUrl()) {
+      <div class="ss-modal-overlay" (click)="activeScreenshotUrl.set(null)">
+        <div class="ss-modal-content" (click)="$event.stopPropagation()">
+          <div class="ss-modal-header">
+            <h3>Payment Proof Screenshot</h3>
+            <button class="modal-close" (click)="activeScreenshotUrl.set(null)">&times;</button>
+          </div>
+          <div class="ss-modal-body">
+            <img [src]="activeScreenshotUrl()" alt="Payment Screenshot" class="full-ss-img" />
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .customer-title-block {
@@ -368,6 +394,108 @@ import { Customer, Payment } from '../../models/customer.model';
 
     .mt-2 { margin-top: 0.5rem; }
     .font-medium { font-weight: 500; }
+
+    .ss-table-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.2rem 0.45rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.25);
+        border-color: #818cf8;
+      }
+    }
+
+    .ss-thumb {
+      width: 26px;
+      height: 26px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .ss-badge {
+      font-size: 0.725rem;
+      font-weight: 700;
+      color: #818cf8;
+    }
+
+    .no-ss-tag {
+      font-size: 0.725rem;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .ss-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 15, 30, 0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      padding: 1.5rem;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .ss-modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      max-width: 800px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-modal);
+    }
+
+    .ss-modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0;
+      }
+
+      .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+        line-height: 1;
+      }
+    }
+
+    .ss-modal-body {
+      padding: 1.25rem;
+      overflow: auto;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .full-ss-img {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
   `]
 })
 export class CustomerDetailModalComponent {
@@ -378,6 +506,7 @@ export class CustomerDetailModalComponent {
   openAddPaymentModal = output<void>();
   viewReceipt = output<Payment>();
   customerDeleted = output<void>();
+  activeScreenshotUrl = signal<string | null>(null);
 
   readonly customerPayments = computed(() => {
     const cust = this.customer();

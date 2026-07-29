@@ -1,5 +1,6 @@
 import { Component, inject, computed, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { CustomerService } from '../../services/customer.service';
 import { Payment } from '../../models/customer.model';
@@ -7,7 +8,7 @@ import { Payment } from '../../models/customer.model';
 @Component({
   selector: 'app-customer-portal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="customer-portal-container">
       @if (customer(); as cust) {
@@ -75,7 +76,15 @@ import { Payment } from '../../models/customer.model';
               <h2 class="section-title">Your Payment History</h2>
               <p class="section-sub">Showing only your transaction logs and receipts</p>
             </div>
-            <span class="badge badge-neutral">{{ payments().length }} Payment(s)</span>
+            <div class="history-actions">
+              <select class="month-select-sm" [(ngModel)]="selectedMonth">
+                <option value="all">📅 All Months</option>
+                @for (m of availableMonths(); track m.value) {
+                  <option [value]="m.value">📅 {{ m.label }}</option>
+                }
+              </select>
+              <span class="badge badge-neutral">{{ payments().length }} Payment(s)</span>
+            </div>
           </div>
 
           @if (payments().length === 0) {
@@ -100,6 +109,7 @@ import { Payment } from '../../models/customer.model';
                     <th>Reference / Txn ID</th>
                     <th>Notes</th>
                     <th>Amount Paid</th>
+                    <th>Screenshot</th>
                     <th>Verify</th>
                     <th class="text-right">Receipt</th>
                   </tr>
@@ -114,6 +124,16 @@ import { Payment } from '../../models/customer.model';
                       <td><code>{{ pay.referenceNumber }}</code></td>
                       <td class="notes-cell">{{ pay.notes || '-' }}</td>
                       <td class="amount-cell text-success">\${{ pay.amount | number:'1.2-2' }}</td>
+                      <td>
+                        @if (pay.screenshotUrl) {
+                          <div class="ss-table-cell" (click)="activeScreenshotUrl.set(pay.screenshotUrl)" title="Click to view payment screenshot">
+                            <img [src]="pay.screenshotUrl" alt="SS" class="ss-thumb" />
+                            <span class="ss-badge">View SS</span>
+                          </div>
+                        } @else {
+                          <span class="no-ss-tag">No SS</span>
+                        }
+                      </td>
                       <td>
                         <span
                           class="status-pill"
@@ -176,6 +196,21 @@ import { Payment } from '../../models/customer.model';
                 <button class="btn btn-success" (click)="showQrModal.set(false); openAddPayment.emit()">
                   Log Payment Transaction
                 </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Full-screen Screenshot Lightbox Modal -->
+        @if (activeScreenshotUrl()) {
+          <div class="ss-modal-overlay" (click)="activeScreenshotUrl.set(null)">
+            <div class="ss-modal-content" (click)="$event.stopPropagation()">
+              <div class="ss-modal-header">
+                <h3>Payment Proof Screenshot</h3>
+                <button class="modal-close" (click)="activeScreenshotUrl.set(null)">&times;</button>
+              </div>
+              <div class="ss-modal-body">
+                <img [src]="activeScreenshotUrl()" alt="Payment Screenshot" class="full-ss-img" />
               </div>
             </div>
           </div>
@@ -317,6 +352,31 @@ import { Payment } from '../../models/customer.model';
       align-items: center;
       justify-content: space-between;
       margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .history-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .month-select-sm {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+      transition: var(--transition);
+
+      &:focus {
+        border-color: var(--primary);
+      }
     }
 
     .section-title {
@@ -594,6 +654,108 @@ import { Payment } from '../../models/customer.model';
     }
 
     .mt-3 { margin-top: 1rem; }
+
+    .ss-table-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.2rem 0.45rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.25);
+        border-color: #818cf8;
+      }
+    }
+
+    .ss-thumb {
+      width: 26px;
+      height: 26px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .ss-badge {
+      font-size: 0.725rem;
+      font-weight: 700;
+      color: #818cf8;
+    }
+
+    .no-ss-tag {
+      font-size: 0.725rem;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .ss-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 15, 30, 0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      padding: 1.5rem;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .ss-modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      max-width: 800px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-modal);
+    }
+
+    .ss-modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0;
+      }
+
+      .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+        line-height: 1;
+      }
+    }
+
+    .ss-modal-body {
+      padding: 1.25rem;
+      overflow: auto;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .full-ss-img {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
   `]
 })
 export class CustomerPortalComponent {
@@ -603,6 +765,7 @@ export class CustomerPortalComponent {
   openAddPayment = output<void>();
   viewReceipt = output<Payment>();
   showQrModal = signal<boolean>(false);
+  activeScreenshotUrl = signal<string | null>(null);
 
   // Current logged in customer profile
   readonly customer = computed(() => {
@@ -620,11 +783,44 @@ export class CustomerPortalComponent {
     return all.find(c => c.email.toLowerCase() === user.email.toLowerCase());
   });
 
-  // Only payments for THIS customer
-  readonly payments = computed(() => {
+  selectedMonth = signal<string>('all');
+
+  private allCustomerPayments = computed(() => {
     const cust = this.customer();
     if (!cust) return [];
     return this.customerService.getPaymentsByCustomerId(cust.id);
+  });
+
+  readonly availableMonths = computed(() => {
+    const monthsSet = new Set<string>();
+    this.allCustomerPayments().forEach(p => {
+      if (p.paymentDate && p.paymentDate.length >= 7) {
+        monthsSet.add(p.paymentDate.substring(0, 7));
+      }
+    });
+
+    return Array.from(monthsSet).sort().reverse().map(ym => {
+      const [year, monthStr] = ym.split('-');
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      const monthName = monthNames[parseInt(monthStr, 10) - 1] || monthStr;
+      return {
+        value: ym,
+        label: `${monthName} ${year}`
+      };
+    });
+  });
+
+  // Only payments for THIS customer (filtered by month)
+  readonly payments = computed(() => {
+    let list = this.allCustomerPayments();
+    const month = this.selectedMonth();
+    if (month !== 'all') {
+      list = list.filter(p => p.paymentDate && p.paymentDate.startsWith(month));
+    }
+    return list;
   });
 
   getInitials(name: string): string {

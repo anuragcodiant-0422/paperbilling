@@ -116,6 +116,48 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
               ></textarea>
             </div>
 
+            <!-- Payment Screenshot / Proof Upload -->
+            <div class="form-group">
+              <label class="form-label">Payment Screenshot / Proof (Optional)</label>
+              @if (screenshotUrl()) {
+                <div class="ss-preview-box">
+                  <img [src]="screenshotUrl()" alt="Payment Screenshot Preview" class="ss-preview-img" (click)="showSsFull.set(true)" title="Click to Expand Screenshot" />
+                  <div class="ss-preview-actions">
+                    <span class="ss-file-badge">✓ Screenshot Attached</span>
+                    <button type="button" class="btn-ss-remove" (click)="removeScreenshot()">
+                      ✕ Remove Screenshot
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div
+                  class="ss-dropzone"
+                  [class.dragover]="isDragging()"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)"
+                  (click)="fileInput.click()"
+                >
+                  <input
+                    #fileInput
+                    type="file"
+                    accept="image/*"
+                    class="hidden-file-input"
+                    (change)="onFileSelected($event)"
+                  />
+                  <div class="dropzone-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                      <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <span class="dz-title">Upload Payment Screenshot</span>
+                    <span class="dz-sub">Drag & drop image here or click to select (PNG, JPG, WEBP)</span>
+                  </div>
+                </div>
+              }
+            </div>
+
             @if (errorMessage()) {
               <div class="error-alert">
                 {{ errorMessage() }}
@@ -133,6 +175,21 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
         </form>
       </div>
     </div>
+
+    <!-- Full-screen Screenshot Lightbox Modal -->
+    @if (showSsFull() && screenshotUrl()) {
+      <div class="ss-modal-overlay" (click)="showSsFull.set(false)">
+        <div class="ss-modal-content" (click)="$event.stopPropagation()">
+          <div class="ss-modal-header">
+            <h3>Payment Screenshot Proof</h3>
+            <button class="modal-close" (click)="showSsFull.set(false)">&times;</button>
+          </div>
+          <div class="ss-modal-body">
+            <img [src]="screenshotUrl()" alt="Full Payment Screenshot" class="full-ss-img" />
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .modal-backdrop {
@@ -380,6 +437,153 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
       font-weight: 700;
       margin-right: 0.25rem;
     }
+
+    .hidden-file-input {
+      display: none;
+    }
+
+    .ss-dropzone {
+      border: 2px dashed rgba(99, 102, 241, 0.4);
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover, &.dragover {
+        border-color: #818cf8;
+        background: rgba(99, 102, 241, 0.12);
+      }
+    }
+
+    .dropzone-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--text-muted);
+    }
+
+    .dz-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .dz-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .ss-preview-box {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+    }
+
+    .ss-preview-img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    .ss-preview-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .ss-file-badge {
+      font-size: 0.775rem;
+      font-weight: 700;
+      color: #34d399;
+    }
+
+    .btn-ss-remove {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.3);
+        color: #ffffff;
+      }
+    }
+
+    .ss-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 15, 30, 0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      padding: 1.5rem;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .ss-modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      max-width: 800px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-modal);
+    }
+
+    .ss-modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0;
+      }
+    }
+
+    .ss-modal-body {
+      padding: 1.25rem;
+      overflow: auto;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .full-ss-img {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
   `]
 })
 export class AddPaymentModalComponent {
@@ -395,11 +599,65 @@ export class AddPaymentModalComponent {
   paymentMethod: PaymentMethod = 'Bank Transfer';
   referenceNumber: string = '';
   notes: string = '';
+  screenshotUrl = signal<string>('');
+  isDragging = signal<boolean>(false);
+  showSsFull = signal<boolean>(false);
   isSubmitting = signal<boolean>(false);
   errorMessage = signal<string>('');
 
   onClose(): void {
     this.close.emit();
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.processFile(input.files[0]);
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      this.processFile(event.dataTransfer.files[0]);
+    }
+  }
+
+  private processFile(file: File): void {
+    if (!file.type.startsWith('image/')) {
+      this.errorMessage.set('Please upload a valid image file (PNG, JPG, WEBP).');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.errorMessage.set('Image file size exceeds 5MB limit. Please select a smaller file.');
+      return;
+    }
+    this.errorMessage.set('');
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      this.screenshotUrl.set(result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeScreenshot(): void {
+    this.screenshotUrl.set('');
   }
 
   onSubmit(): void {
@@ -423,6 +681,7 @@ export class AddPaymentModalComponent {
       paymentMethod: this.paymentMethod,
       referenceNumber: this.referenceNumber.trim() || 'N/A',
       notes: this.notes.trim() || 'Payment received',
+      screenshotUrl: this.screenshotUrl() || undefined,
       status: defaultStatus
     });
 

@@ -30,35 +30,46 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
           }
         </div>
 
-        <div class="tab-filters">
-          <button
-            class="tab-btn"
-            [class.active]="activeTab() === 'all'"
-            (click)="activeTab.set('all')"
-          >
-            All Payments ({{ allCount() }})
-          </button>
-          <button
-            class="tab-btn"
-            [class.active]="activeTab() === 'pending'"
-            (click)="activeTab.set('pending')"
-          >
-            Pending ({{ pendingCount() }})
-          </button>
-          <button
-            class="tab-btn"
-            [class.active]="activeTab() === 'complete'"
-            (click)="activeTab.set('complete')"
-          >
-            Complete ({{ completeCount() }})
-          </button>
-          <button
-            class="tab-btn"
-            [class.active]="activeTab() === 'cancel'"
-            (click)="activeTab.set('cancel')"
-          >
-            Cancel ({{ cancelCount() }})
-          </button>
+        <div class="filter-controls-group">
+          <!-- Month Filter Selector -->
+          <select class="month-select" [(ngModel)]="selectedMonth">
+            <option value="all">📅 All Months</option>
+            @for (m of availableMonths(); track m.value) {
+              <option [value]="m.value">📅 {{ m.label }}</option>
+            }
+          </select>
+
+          <!-- Status Tab Filters -->
+          <div class="tab-filters">
+            <button
+              class="tab-btn"
+              [class.active]="activeTab() === 'all'"
+              (click)="activeTab.set('all')"
+            >
+              All Payments ({{ allCount() }})
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="activeTab() === 'pending'"
+              (click)="activeTab.set('pending')"
+            >
+              Pending ({{ pendingCount() }})
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="activeTab() === 'complete'"
+              (click)="activeTab.set('complete')"
+            >
+              Complete ({{ completeCount() }})
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="activeTab() === 'cancel'"
+              (click)="activeTab.set('cancel')"
+            >
+              Cancel ({{ cancelCount() }})
+            </button>
+          </div>
         </div>
       </div>
 
@@ -95,6 +106,7 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
                   <th>Ref / Txn ID</th>
                   <th>Notes</th>
                   <th>Amount</th>
+                  <th>Screenshot</th>
                   <th>Verify</th>
                   <th class="text-right">Actions</th>
                 </tr>
@@ -121,6 +133,16 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
                     <td><code>{{ pay.referenceNumber || 'N/A' }}</code></td>
                     <td class="notes-cell">{{ pay.notes || '-' }}</td>
                     <td class="amount-cell text-success">\${{ pay.amount | number:'1.2-2' }}</td>
+                    <td>
+                      @if (pay.screenshotUrl) {
+                        <div class="ss-table-cell" (click)="viewScreenshot(pay.screenshotUrl)" title="Click to view payment screenshot">
+                          <img [src]="pay.screenshotUrl" alt="SS" class="ss-thumb" />
+                          <span class="ss-badge">View SS</span>
+                        </div>
+                      } @else {
+                        <span class="no-ss-tag">No SS</span>
+                      }
+                    </td>
                     <td>
                       <select
                         class="status-select"
@@ -162,6 +184,21 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
         }
       </div>
     </div>
+
+    <!-- Full-screen Screenshot Lightbox Modal -->
+    @if (activeScreenshotUrl()) {
+      <div class="ss-modal-overlay" (click)="activeScreenshotUrl.set(null)">
+        <div class="ss-modal-content" (click)="$event.stopPropagation()">
+          <div class="ss-modal-header">
+            <h3>Payment Proof Screenshot</h3>
+            <button class="modal-close" (click)="activeScreenshotUrl.set(null)">&times;</button>
+          </div>
+          <div class="ss-modal-body">
+            <img [src]="activeScreenshotUrl()" alt="Payment Screenshot" class="full-ss-img" />
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .all-payments-container {
@@ -219,6 +256,31 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
       color: var(--text-muted);
       font-size: 1.25rem;
       cursor: pointer;
+    }
+
+    .filter-controls-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .month-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: #ffffff;
+      padding: 0.55rem 0.85rem;
+      border-radius: var(--radius-md);
+      font-size: 0.825rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+      transition: var(--transition);
+
+      &:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+      }
     }
 
     .tab-filters {
@@ -445,6 +507,108 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
     .font-bold { font-weight: 700; }
     .text-success { color: #34d399; }
     .mt-3 { margin-top: 1rem; }
+
+    .ss-table-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.2rem 0.45rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.25);
+        border-color: #818cf8;
+      }
+    }
+
+    .ss-thumb {
+      width: 26px;
+      height: 26px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .ss-badge {
+      font-size: 0.725rem;
+      font-weight: 700;
+      color: #818cf8;
+    }
+
+    .no-ss-tag {
+      font-size: 0.725rem;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .ss-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 15, 30, 0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      padding: 1.5rem;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .ss-modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      max-width: 800px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-modal);
+    }
+
+    .ss-modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0;
+      }
+
+      .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+        line-height: 1;
+      }
+    }
+
+    .ss-modal-body {
+      padding: 1.25rem;
+      overflow: auto;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .full-ss-img {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
   `]
 })
 export class AllPaymentsListComponent {
@@ -455,8 +619,36 @@ export class AllPaymentsListComponent {
 
   searchQuery = signal<string>('');
   activeTab = signal<StatusTab>('all');
+  selectedMonth = signal<string>('all');
+  activeScreenshotUrl = signal<string | null>(null);
+
+  viewScreenshot(url: string): void {
+    this.activeScreenshotUrl.set(url);
+  }
 
   private allPayments = computed(() => this.customerService.payments());
+
+  readonly availableMonths = computed(() => {
+    const monthsSet = new Set<string>();
+    this.allPayments().forEach(p => {
+      if (p.paymentDate && p.paymentDate.length >= 7) {
+        monthsSet.add(p.paymentDate.substring(0, 7));
+      }
+    });
+
+    return Array.from(monthsSet).sort().reverse().map(ym => {
+      const [year, monthStr] = ym.split('-');
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      const monthName = monthNames[parseInt(monthStr, 10) - 1] || monthStr;
+      return {
+        value: ym,
+        label: `${monthName} ${year}`
+      };
+    });
+  });
 
   getCustomerForPayment(payment: Payment): Customer | undefined {
     return this.customerService.getCustomerById(payment.customerId);
@@ -471,6 +663,11 @@ export class AllPaymentsListComponent {
     let list = this.allPayments();
     const query = this.searchQuery().toLowerCase().trim();
     const tab = this.activeTab();
+    const month = this.selectedMonth();
+
+    if (month !== 'all') {
+      list = list.filter(p => p.paymentDate && p.paymentDate.startsWith(month));
+    }
 
     if (query) {
       list = list.filter(p => {

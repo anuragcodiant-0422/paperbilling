@@ -10,6 +10,7 @@ export interface Payment {
   paymentMethod: PaymentMethod;
   referenceNumber: string;
   notes?: string;
+  screenshotUrl?: string;
   status: PaymentStatus;
 }
 

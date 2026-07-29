@@ -33,28 +33,7 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
         <form (ngSubmit)="onSubmit()">
           <div class="modal-body">
             <!-- Scan QR Code Helper Box -->
-            <div class="qr-helper-box">
-              <div class="qr-helper-left">
-                <img src="/Image.png" alt="Payment QR" class="qr-helper-thumb" />
-                <div>
-                  <span class="qr-helper-title">Scan Payment QR Code</span>
-                  <p class="qr-helper-sub">Scan using GPay, PhonePe, Paytm, or UPI</p>
-                </div>
-              </div>
-              <div class="qr-helper-actions">
-                <button type="button" class="btn-gpay-app-sm" (click)="openGooglePayApp()" title="Redirect directly to Google Pay App">
-                  📲 Open GPay App
-                </button>
-                <a href="/Image.png" download="Payment_QR_Code.png" class="btn-qr-dl" title="Download QR Image">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  Download QR
-                </a>
-              </div>
-            </div>
+            
 
             <div class="form-row">
               <div class="form-group">

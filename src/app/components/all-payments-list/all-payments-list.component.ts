@@ -31,13 +31,45 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
         </div>
 
         <div class="filter-controls-group">
-          <!-- Month Filter Selector -->
-          <select class="month-select" [(ngModel)]="selectedMonth">
-            <option value="all">📅 All Months</option>
-            @for (m of availableMonths(); track m.value) {
-              <option [value]="m.value">📅 {{ m.label }}</option>
-            }
-          </select>
+          <!-- Date Range Filter Selector & Custom Date Pickers -->
+          <div class="date-range-group">
+            <select class="date-preset-select" [ngModel]="datePreset()" (ngModelChange)="onPresetChange($event)">
+              <option value="all">📅 All Time</option>
+              <option value="today">📅 Today</option>
+              <option value="yesterday">📅 Yesterday</option>
+              <option value="this-week">📅 This Week</option>
+              <option value="this-month">📅 This Month</option>
+              <option value="last-month">📅 Last Month</option>
+              <option value="custom">📆 Custom Range...</option>
+            </select>
+
+            <div class="date-inputs-wrap">
+              <div class="date-field">
+                <span class="date-label">From:</span>
+                <input
+                  type="date"
+                  class="date-picker-input"
+                  [ngModel]="startDate()"
+                  (ngModelChange)="onStartDateChange($event)"
+                />
+              </div>
+              <div class="date-field">
+                <span class="date-label">To:</span>
+                <input
+                  type="date"
+                  class="date-picker-input"
+                  [ngModel]="endDate()"
+                  (ngModelChange)="onEndDateChange($event)"
+                />
+              </div>
+
+              @if (startDate() || endDate() || datePreset() !== 'all') {
+                <button class="btn-clear-date" (click)="clearDateRange()" title="Reset Date Filter">
+                  ✕ Reset
+                </button>
+              }
+            </div>
+          </div>
 
           <!-- Status Tab Filters -->
           <div class="tab-filters">
@@ -265,7 +297,14 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
       flex-wrap: wrap;
     }
 
-    .month-select {
+    .date-range-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .date-preset-select {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       color: #ffffff;
@@ -280,6 +319,63 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
       &:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px var(--primary-light);
+      }
+    }
+
+    .date-inputs-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      padding: 0.3rem 0.6rem;
+      border-radius: var(--radius-md);
+      flex-wrap: wrap;
+    }
+
+    .date-field {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .date-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .date-picker-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      outline: none;
+      color-scheme: dark;
+
+      &:focus {
+        border-color: var(--primary);
+      }
+    }
+
+    .btn-clear-date {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.3);
+        color: #ffffff;
       }
     }
 
@@ -619,36 +715,74 @@ export class AllPaymentsListComponent {
 
   searchQuery = signal<string>('');
   activeTab = signal<StatusTab>('all');
-  selectedMonth = signal<string>('all');
+  datePreset = signal<string>('all');
+  startDate = signal<string>('');
+  endDate = signal<string>('');
   activeScreenshotUrl = signal<string | null>(null);
 
   viewScreenshot(url: string): void {
     this.activeScreenshotUrl.set(url);
   }
 
+  onPresetChange(preset: string): void {
+    this.datePreset.set(preset);
+    const today = new Date();
+    const formatDate = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    if (preset === 'all') {
+      this.startDate.set('');
+      this.endDate.set('');
+    } else if (preset === 'today') {
+      const t = formatDate(today);
+      this.startDate.set(t);
+      this.endDate.set(t);
+    } else if (preset === 'yesterday') {
+      const y = new Date(today);
+      y.setDate(y.getDate() - 1);
+      const yStr = formatDate(y);
+      this.startDate.set(yStr);
+      this.endDate.set(yStr);
+    } else if (preset === 'this-week') {
+      const dayOfWeek = today.getDay();
+      const diffToMonday = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() + diffToMonday);
+      this.startDate.set(formatDate(monday));
+      this.endDate.set(formatDate(today));
+    } else if (preset === 'this-month') {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      this.startDate.set(formatDate(firstDay));
+      this.endDate.set(formatDate(today));
+    } else if (preset === 'last-month') {
+      const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      this.startDate.set(formatDate(firstDayLastMonth));
+      this.endDate.set(formatDate(lastDayLastMonth));
+    }
+  }
+
+  onStartDateChange(val: string): void {
+    this.startDate.set(val);
+    this.datePreset.set('custom');
+  }
+
+  onEndDateChange(val: string): void {
+    this.endDate.set(val);
+    this.datePreset.set('custom');
+  }
+
+  clearDateRange(): void {
+    this.datePreset.set('all');
+    this.startDate.set('');
+    this.endDate.set('');
+  }
+
   private allPayments = computed(() => this.customerService.payments());
-
-  readonly availableMonths = computed(() => {
-    const monthsSet = new Set<string>();
-    this.allPayments().forEach(p => {
-      if (p.paymentDate && p.paymentDate.length >= 7) {
-        monthsSet.add(p.paymentDate.substring(0, 7));
-      }
-    });
-
-    return Array.from(monthsSet).sort().reverse().map(ym => {
-      const [year, monthStr] = ym.split('-');
-      const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-      ];
-      const monthName = monthNames[parseInt(monthStr, 10) - 1] || monthStr;
-      return {
-        value: ym,
-        label: `${monthName} ${year}`
-      };
-    });
-  });
 
   getCustomerForPayment(payment: Payment): Customer | undefined {
     return this.customerService.getCustomerById(payment.customerId);
@@ -663,10 +797,14 @@ export class AllPaymentsListComponent {
     let list = this.allPayments();
     const query = this.searchQuery().toLowerCase().trim();
     const tab = this.activeTab();
-    const month = this.selectedMonth();
+    const start = this.startDate();
+    const end = this.endDate();
 
-    if (month !== 'all') {
-      list = list.filter(p => p.paymentDate && p.paymentDate.startsWith(month));
+    if (start) {
+      list = list.filter(p => p.paymentDate && p.paymentDate >= start);
+    }
+    if (end) {
+      list = list.filter(p => p.paymentDate && p.paymentDate <= end);
     }
 
     if (query) {

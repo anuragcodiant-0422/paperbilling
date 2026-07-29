@@ -77,12 +77,44 @@ import { Payment } from '../../models/customer.model';
               <p class="section-sub">Showing only your transaction logs and receipts</p>
             </div>
             <div class="history-actions">
-              <select class="month-select-sm" [(ngModel)]="selectedMonth">
-                <option value="all">📅 All Months</option>
-                @for (m of availableMonths(); track m.value) {
-                  <option [value]="m.value">📅 {{ m.label }}</option>
-                }
-              </select>
+              <div class="date-range-group">
+                <select class="date-preset-select-sm" [ngModel]="datePreset()" (ngModelChange)="onPresetChange($event)">
+                  <option value="all">📅 All Time</option>
+                  <option value="today">📅 Today</option>
+                  <option value="yesterday">📅 Yesterday</option>
+                  <option value="this-week">📅 This Week</option>
+                  <option value="this-month">📅 This Month</option>
+                  <option value="last-month">📅 Last Month</option>
+                  <option value="custom">📆 Custom Range...</option>
+                </select>
+
+                <div class="date-inputs-wrap-sm">
+                  <div class="date-field-sm">
+                    <span class="date-label-sm">From:</span>
+                    <input
+                      type="date"
+                      class="date-picker-input-sm"
+                      [ngModel]="startDate()"
+                      (ngModelChange)="onStartDateChange($event)"
+                    />
+                  </div>
+                  <div class="date-field-sm">
+                    <span class="date-label-sm">To:</span>
+                    <input
+                      type="date"
+                      class="date-picker-input-sm"
+                      [ngModel]="endDate()"
+                      (ngModelChange)="onEndDateChange($event)"
+                    />
+                  </div>
+
+                  @if (startDate() || endDate() || datePreset() !== 'all') {
+                    <button class="btn-clear-date-sm" (click)="clearDateRange()" title="Reset Date Filter">
+                      ✕ Reset
+                    </button>
+                  }
+                </div>
+              </div>
               <span class="badge badge-neutral">{{ payments().length }} Payment(s)</span>
             </div>
           </div>
@@ -362,7 +394,14 @@ import { Payment } from '../../models/customer.model';
       gap: 0.75rem;
     }
 
-    .month-select-sm {
+    .date-range-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .date-preset-select-sm {
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--border-color);
       color: var(--text-main);
@@ -376,6 +415,63 @@ import { Payment } from '../../models/customer.model';
 
       &:focus {
         border-color: var(--primary);
+      }
+    }
+
+    .date-inputs-wrap-sm {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      flex-wrap: wrap;
+    }
+
+    .date-field-sm {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .date-label-sm {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .date-picker-input-sm {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.775rem;
+      font-weight: 600;
+      outline: none;
+      color-scheme: dark;
+
+      &:focus {
+        border-color: var(--primary);
+      }
+    }
+
+    .btn-clear-date-sm {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.725rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.3);
+        color: #ffffff;
       }
     }
 
@@ -783,7 +879,67 @@ export class CustomerPortalComponent {
     return all.find(c => c.email.toLowerCase() === user.email.toLowerCase());
   });
 
-  selectedMonth = signal<string>('all');
+  datePreset = signal<string>('all');
+  startDate = signal<string>('');
+  endDate = signal<string>('');
+
+  onPresetChange(preset: string): void {
+    this.datePreset.set(preset);
+    const today = new Date();
+    const formatDate = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    if (preset === 'all') {
+      this.startDate.set('');
+      this.endDate.set('');
+    } else if (preset === 'today') {
+      const t = formatDate(today);
+      this.startDate.set(t);
+      this.endDate.set(t);
+    } else if (preset === 'yesterday') {
+      const y = new Date(today);
+      y.setDate(y.getDate() - 1);
+      const yStr = formatDate(y);
+      this.startDate.set(yStr);
+      this.endDate.set(yStr);
+    } else if (preset === 'this-week') {
+      const dayOfWeek = today.getDay();
+      const diffToMonday = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() + diffToMonday);
+      this.startDate.set(formatDate(monday));
+      this.endDate.set(formatDate(today));
+    } else if (preset === 'this-month') {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      this.startDate.set(formatDate(firstDay));
+      this.endDate.set(formatDate(today));
+    } else if (preset === 'last-month') {
+      const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      this.startDate.set(formatDate(firstDayLastMonth));
+      this.endDate.set(formatDate(lastDayLastMonth));
+    }
+  }
+
+  onStartDateChange(val: string): void {
+    this.startDate.set(val);
+    this.datePreset.set('custom');
+  }
+
+  onEndDateChange(val: string): void {
+    this.endDate.set(val);
+    this.datePreset.set('custom');
+  }
+
+  clearDateRange(): void {
+    this.datePreset.set('all');
+    this.startDate.set('');
+    this.endDate.set('');
+  }
 
   private allCustomerPayments = computed(() => {
     const cust = this.customer();
@@ -791,34 +947,16 @@ export class CustomerPortalComponent {
     return this.customerService.getPaymentsByCustomerId(cust.id);
   });
 
-  readonly availableMonths = computed(() => {
-    const monthsSet = new Set<string>();
-    this.allCustomerPayments().forEach(p => {
-      if (p.paymentDate && p.paymentDate.length >= 7) {
-        monthsSet.add(p.paymentDate.substring(0, 7));
-      }
-    });
-
-    return Array.from(monthsSet).sort().reverse().map(ym => {
-      const [year, monthStr] = ym.split('-');
-      const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-      ];
-      const monthName = monthNames[parseInt(monthStr, 10) - 1] || monthStr;
-      return {
-        value: ym,
-        label: `${monthName} ${year}`
-      };
-    });
-  });
-
-  // Only payments for THIS customer (filtered by month)
+  // Only payments for THIS customer (filtered by date range)
   readonly payments = computed(() => {
     let list = this.allCustomerPayments();
-    const month = this.selectedMonth();
-    if (month !== 'all') {
-      list = list.filter(p => p.paymentDate && p.paymentDate.startsWith(month));
+    const start = this.startDate();
+    const end = this.endDate();
+    if (start) {
+      list = list.filter(p => p.paymentDate && p.paymentDate >= start);
+    }
+    if (end) {
+      list = list.filter(p => p.paymentDate && p.paymentDate <= end);
     }
     return list;
   });

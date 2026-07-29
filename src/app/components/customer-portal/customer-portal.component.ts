@@ -66,7 +66,7 @@ import { Payment } from '../../models/customer.model';
                 (loadpaymentdata)="onGooglePaySuccess($event)"
                 (error)="onGooglePayError($event)"
               ></google-pay-button>
-              <button class="btn btn-gpay-app" (click)="openGooglePayApp(100)">
+              <button class="btn btn-gpay-app" (click)="openGooglePayApp()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
                   <line x1="12" y1="18" x2="12.01" y2="18"></line>
@@ -339,9 +339,16 @@ import { Payment } from '../../models/customer.model';
       margin-bottom: 1.75rem;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1024px) {
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
       }
     }
 
@@ -352,6 +359,10 @@ import { Payment } from '../../models/customer.model';
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     .sb-label {
@@ -1040,21 +1051,29 @@ export class CustomerPortalComponent {
     console.error('Google Pay Error:', error);
   }
 
-  openGooglePayApp(amount: number = 100): void {
+  openGooglePayApp(): void {
     const cust = this.customer();
-    const upiVpa = 'paperbilling@upi';
-    const merchantName = encodeURIComponent('PaperBilling Suite');
+    const upiVpa = 'anuragbagdi6635-1@okicici';
+    const merchantName = encodeURIComponent('PaperBilling');
     const note = encodeURIComponent(`Bill Payment for ${cust?.name || 'Customer'}`);
 
-    const gpayIntentUrl = `intent://pay?pa=${upiVpa}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end;`;
-    const standardUpiUrl = `upi://pay?pa=${upiVpa}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}`;
+    // Direct Google Pay app schemes (Omit &am= parameter so user manually enters amount inside GPay app)
+    const gpayAndroidIntent = `intent://pay?pa=${upiVpa}&pn=${merchantName}&cu=INR&tn=${note}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end;`;
+    const gpayScheme = `gpay://upi/pay?pa=${upiVpa}&pn=${merchantName}&cu=INR&tn=${note}`;
+    const standardUpiUrl = `upi://pay?pa=${upiVpa}&pn=${merchantName}&cu=INR&tn=${note}`;
 
     const isAndroid = /Android/i.test(navigator.userAgent);
 
-    window.location.href = isAndroid ? gpayIntentUrl : standardUpiUrl;
+    try {
+      window.location.href = isAndroid ? gpayAndroidIntent : gpayScheme;
+    } catch (e) {
+      window.location.href = standardUpiUrl;
+    }
 
     setTimeout(() => {
-      if (confirm('Did your Google Pay app payment complete successfully?')) {
+      const amtStr = prompt('If your Google Pay payment succeeded, enter the amount paid ($):');
+      if (amtStr && !isNaN(Number(amtStr)) && Number(amtStr) > 0) {
+        const amount = Number(amtStr);
         const today = new Date().toISOString().split('T')[0];
         const txnId = 'GPAY-APP-' + Math.random().toString(36).substring(2, 9).toUpperCase();
 
@@ -1068,7 +1087,7 @@ export class CustomerPortalComponent {
           notes: 'Payment completed via Google Pay App'
         });
       }
-    }, 2500);
+    }, 3000);
   }
 
   datePreset = signal<string>('all');

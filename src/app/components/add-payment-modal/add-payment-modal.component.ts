@@ -716,16 +716,21 @@ export class AddPaymentModalComponent {
 
   openGooglePayApp(): void {
     const cust = this.customer();
-    const payAmt = this.amount || 100;
-    const upiVpa = 'paperbilling@upi';
-    const merchantName = encodeURIComponent('PaperBilling Suite');
+    const upiVpa = 'anuragbagdi6635-1@okicici';
+    const merchantName = encodeURIComponent('PaperBilling');
     const note = encodeURIComponent(`Bill Payment for ${cust?.name || 'Customer'}`);
+    const amountParam = (this.amount && this.amount > 0) ? `&am=${this.amount}` : '';
 
-    const gpayIntentUrl = `intent://pay?pa=${upiVpa}&pn=${merchantName}&am=${payAmt}&cu=INR&tn=${note}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end;`;
-    const standardUpiUrl = `upi://pay?pa=${upiVpa}&pn=${merchantName}&am=${payAmt}&cu=INR&tn=${note}`;
+    const gpayAndroidIntent = `intent://pay?pa=${upiVpa}&pn=${merchantName}${amountParam}&cu=INR&tn=${note}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end;`;
+    const gpayScheme = `gpay://upi/pay?pa=${upiVpa}&pn=${merchantName}${amountParam}&cu=INR&tn=${note}`;
+    const standardUpiUrl = `upi://pay?pa=${upiVpa}&pn=${merchantName}${amountParam}&cu=INR&tn=${note}`;
 
     const isAndroid = /Android/i.test(navigator.userAgent);
-    window.location.href = isAndroid ? gpayIntentUrl : standardUpiUrl;
+    try {
+      window.location.href = isAndroid ? gpayAndroidIntent : gpayScheme;
+    } catch (e) {
+      window.location.href = standardUpiUrl;
+    }
 
     this.paymentMethod = 'Google Pay';
     if (!this.notes) {

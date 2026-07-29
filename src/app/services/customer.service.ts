@@ -83,6 +83,16 @@ export class CustomerService {
       .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
   }
 
+  isPhoneUnique(phone: string, excludeCustomerId?: string): boolean {
+    const cleanPhone = (phone || '').replace(/\D/g, '').trim();
+    if (!cleanPhone) return true;
+    return !this.customers().some(c => {
+      if (excludeCustomerId && c.id === excludeCustomerId) return false;
+      const cCleanPhone = (c.phone || '').replace(/\D/g, '').trim();
+      return cCleanPhone === cleanPhone;
+    });
+  }
+
   addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'totalPaid' | 'balanceDue' | 'avatarColor'>): Customer {
     // Check if a customer profile for this email already exists
     const existing = this.customers().find(c => c.email.toLowerCase() === customerData.email.toLowerCase().trim());

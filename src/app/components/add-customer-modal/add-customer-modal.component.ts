@@ -59,13 +59,16 @@ import { CustomerService } from '../../services/customer.service';
               </div>
 
               <div class="form-group">
-                <label class="form-label">Phone Number</label>
+                <label class="form-label">Phone Number (10 Digits) *</label>
                 <input
                   type="tel"
                   class="form-control"
-                  placeholder="e.g. +1 (555) 019-2834"
+                  placeholder="e.g. 9876543210 (10 digits)"
                   [(ngModel)]="phone"
+                  (input)="onPhoneInput($event)"
+                  maxlength="10"
                   name="phone"
+                  required
                 />
               </div>
             </div>
@@ -176,6 +179,11 @@ export class AddCustomerModalComponent {
     this.close.emit();
   }
 
+  onPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.phone = input.value.replace(/\D/g, '').slice(0, 10);
+  }
+
   onSubmit(): void {
     if (!this.name.trim()) {
       this.errorMessage.set('Customer name is required.');
@@ -185,11 +193,25 @@ export class AddCustomerModalComponent {
       this.errorMessage.set('Email address is required.');
       return;
     }
+    if (!this.phone.trim()) {
+      this.errorMessage.set('Phone number is required.');
+      return;
+    }
+    const cleanPhone = this.phone.replace(/\D/g, '').trim();
+    if (cleanPhone.length !== 10) {
+      this.errorMessage.set('Phone number must be exactly 10 digits (numbers only).');
+      return;
+    }
+    if (!this.customerService.isPhoneUnique(cleanPhone)) {
+      this.errorMessage.set('This phone number is already registered to another customer.');
+      return;
+    }
+
     const created = this.customerService.addCustomer({
       name: this.name.trim(),
       company: this.company.trim() || 'N/A',
       email: this.email.trim(),
-      phone: this.phone.trim() || 'N/A',
+      phone: cleanPhone,
       address: this.address.trim() || 'N/A',
       totalBilled: 0,
       status: 'Active'

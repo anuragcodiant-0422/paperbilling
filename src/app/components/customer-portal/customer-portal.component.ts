@@ -1079,25 +1079,6 @@ export class CustomerPortalComponent {
     } catch (e) {
       window.location.href = standardUpiUrl;
     }
-
-    setTimeout(() => {
-      const amtStr = prompt('If your Google Pay payment succeeded, enter the amount paid ($):');
-      if (amtStr && !isNaN(Number(amtStr)) && Number(amtStr) > 0) {
-        const amount = Number(amtStr);
-        const today = new Date().toISOString().split('T')[0];
-        const txnId = 'GPAY-APP-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-
-        this.customerService.addPayment({
-          customerId: cust?.id || '',
-          amount: amount,
-          paymentDate: today,
-          paymentMethod: 'Google Pay',
-          referenceNumber: txnId,
-          status: 'Complete',
-          notes: 'Payment completed via Google Pay App'
-        });
-      }
-    }, 3000);
   }
 
   datePreset = signal<string>('all');

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { CustomerService } from '../../services/customer.service';
 
 type AuthMode = 'login' | 'register';
 
@@ -140,13 +141,16 @@ type AuthMode = 'login' | 'register';
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Phone Number</label>
+                <label class="form-label">Phone Number (10 Digits) *</label>
                 <input
                   type="tel"
                   class="form-control"
-                  placeholder="+1 (555) 019-2834"
+                  placeholder="e.g. 9876543210 (10 digits)"
                   [(ngModel)]="regPhone"
+                  (input)="onRegPhoneInput($event)"
+                  maxlength="10"
                   name="regPhone"
+                  required
                 />
               </div>
 
@@ -343,6 +347,7 @@ type AuthMode = 'login' | 'register';
 })
 export class AuthComponent {
   private authService = inject(AuthService);
+  private customerService = inject(CustomerService);
 
   mode = signal<AuthMode>('login');
   errorMessage = signal<string>('');
@@ -360,6 +365,11 @@ export class AuthComponent {
   regPhone = '';
   regCompany = '';
   regAddress = '';
+
+  onRegPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.regPhone = input.value.replace(/\D/g, '').slice(0, 10);
+  }
 
   onSwitchTab(newMode: AuthMode): void {
     this.mode.set(newMode);
@@ -390,6 +400,19 @@ export class AuthComponent {
       this.errorMessage.set('Full name and email address are required.');
       return;
     }
+    if (!this.regPhone.trim()) {
+      this.errorMessage.set('Phone number is required.');
+      return;
+    }
+    const cleanPhone = this.regPhone.replace(/\D/g, '').trim();
+    if (cleanPhone.length !== 10) {
+      this.errorMessage.set('Phone number must be exactly 10 digits (numbers only).');
+      return;
+    }
+    if (!this.customerService.isPhoneUnique(cleanPhone)) {
+      this.errorMessage.set('This phone number is already registered to another customer.');
+      return;
+    }
 
     this.isLoading.set(true);
     this.errorMessage.set('');
@@ -399,7 +422,7 @@ export class AuthComponent {
         name: this.regName,
         email: this.regEmail,
         password: this.regPassword,
-        phone: this.regPhone,
+        phone: cleanPhone,
         company: this.regCompany,
         address: this.regAddress
       });

@@ -149,6 +149,13 @@ import { CustomerService } from '../../services/customer.service';
       font-weight: 500;
       margin-top: 0.5rem;
     }
+
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+      }
+    }
   `]
 })
 export class AddCustomerModalComponent {

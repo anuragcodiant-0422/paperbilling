@@ -109,8 +109,8 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
       <div class="table-card">
         <div class="card-header">
           <div>
-            <h2 class="section-title">All Customer Payment Records</h2>
-            <p class="section-sub">Consolidated transaction history for all registered accounts</p>
+            <h3 class="section-title">All Payment Records</h3>
+           
           </div>
           <span class="badge badge-neutral">{{ filteredPayments().length }} Payment(s)</span>
         </div>
@@ -386,6 +386,9 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
       padding: 0.35rem;
       border-radius: var(--radius-md);
       gap: 0.35rem;
+      overflow-x: auto;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
     }
 
     .tab-btn {
@@ -398,6 +401,8 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
       border-radius: var(--radius-sm);
       cursor: pointer;
       transition: var(--transition);
+      white-space: nowrap;
+      flex-shrink: 0;
 
       &:hover {
         color: var(--text-main);
@@ -408,6 +413,50 @@ type StatusTab = 'all' | 'pending' | 'complete' | 'cancel';
         color: #ffffff;
       }
     }
+
+    @media (max-width: 768px) {
+      .search-box {
+        min-width: 100%;
+      }
+
+      .filter-controls-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .date-range-group {
+        width: 100%;
+      }
+
+      .date-preset-select {
+        width: 100%;
+      }
+
+      .date-inputs-wrap {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .date-field {
+        flex: 1;
+      }
+
+      .date-picker-input {
+        width: 100%;
+      }
+
+      .tab-filters {
+        width: 100%;
+      }
+
+      .tab-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+      }
+    }
+
+
 
     .table-card {
       background: var(--bg-card);

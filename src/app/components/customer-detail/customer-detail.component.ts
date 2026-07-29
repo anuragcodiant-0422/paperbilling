@@ -229,6 +229,8 @@ import { Customer, Payment, PaymentStatus } from '../../models/customer.model';
       align-items: center;
       justify-content: space-between;
       margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .back-btn {
@@ -241,6 +243,55 @@ import { Customer, Payment, PaymentStatus } from '../../models/customer.model';
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .top-nav-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .back-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .top-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .top-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .hero-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .financial-dashboard-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .contact-chips {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .chip {
+        width: 100%;
+        word-break: break-all;
+      }
+
+      .hero-name {
+        font-size: 1.3rem !important;
+      }
     }
 
     .customer-hero-card {

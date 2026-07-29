@@ -197,14 +197,28 @@ type AuthMode = 'login' | 'register';
     }
 
     .auth-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-highlight);
-      border-radius: var(--radius-lg);
       width: 100%;
-      max-width: 480px;
-      padding: 2.25rem;
+      max-width: 440px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
       box-shadow: var(--shadow-lg);
       animation: slideUp 0.25s ease-out;
+    }
+
+    @media (max-width: 640px) {
+      .auth-wrapper {
+        padding: 1rem 0.5rem;
+      }
+
+      .auth-card {
+        padding: 1.25rem 1rem;
+      }
+
+      .brand-title {
+        font-size: 1.3rem;
+      }
     }
 
     .auth-header {

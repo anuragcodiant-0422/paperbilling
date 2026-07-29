@@ -304,6 +304,27 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
       gap: 1rem;
     }
 
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+      }
+
+      .qr-helper-box {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+      }
+
+      .qr-helper-left {
+        flex-direction: column;
+      }
+
+      .btn-qr-dl {
+        justify-content: center;
+      }
+    }
+
     .qr-helper-left {
       display: flex;
       align-items: center;

@@ -475,6 +475,42 @@ import { Payment } from '../../models/customer.model';
       }
     }
 
+    @media (max-width: 768px) {
+      .portal-hero {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .history-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .date-range-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .date-preset-select-sm {
+        width: 100%;
+      }
+
+      .date-inputs-wrap-sm {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .date-field-sm {
+        flex: 1;
+      }
+
+      .date-picker-input-sm {
+        width: 100%;
+      }
+    }
+
     .section-title {
       font-size: 1.2rem;
       font-weight: 800;

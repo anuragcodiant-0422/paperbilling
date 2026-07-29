@@ -235,6 +235,43 @@ import { AuthService } from '../../services/auth.service';
         display: none;
       }
     }
+
+    @media (max-width: 640px) {
+      .navbar {
+        padding: 0.6rem 0;
+      }
+
+      .navbar-container {
+        gap: 0.5rem;
+      }
+
+      .brand-name {
+        font-size: 1.05rem;
+      }
+
+      .brand-tag {
+        font-size: 0.65rem;
+      }
+
+      .brand-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .user-info {
+        display: none;
+      }
+
+      .user-profile-badge {
+        padding: 0.2rem;
+        background: transparent;
+        border: none;
+      }
+
+      .nav-actions {
+        gap: 0.4rem;
+      }
+    }
   `]
 })
 export class NavbarComponent {

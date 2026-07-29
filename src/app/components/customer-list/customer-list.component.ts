@@ -219,6 +219,9 @@ type FilterTab = 'all' | 'pending' | 'complete' | 'cancel';
       padding: 0.25rem;
       border-radius: var(--radius-full);
       gap: 0.25rem;
+      overflow-x: auto;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
     }
 
     .tab-btn {
@@ -232,12 +235,37 @@ type FilterTab = 'all' | 'pending' | 'complete' | 'cancel';
       cursor: pointer;
       transition: var(--transition);
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .tab-btn.active {
       background: var(--primary);
       color: #ffffff;
       box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .search-box {
+        min-width: 100%;
+      }
+
+      .control-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .tab-filters {
+        width: 100%;
+      }
+
+      .tab-btn {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+      }
+
+      .customer-grid {
+        grid-template-columns: 1fr !important;
+      }
     }
 
     /* Customer Cards Grid */

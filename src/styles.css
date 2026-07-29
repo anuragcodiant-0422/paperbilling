@@ -310,6 +310,28 @@ body {
 }
 
 @media (max-width: 640px) {
+  .container {
+    padding: 0 0.85rem;
+  }
+
+  .modal-content {
+    max-width: 95vw !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .modal-body {
+    padding: 1rem !important;
+  }
+
+  .modal-header {
+    padding: 1rem !important;
+  }
+
+  .modal-footer {
+    padding: 0.85rem 1rem !important;
+    flex-wrap: wrap;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
   }

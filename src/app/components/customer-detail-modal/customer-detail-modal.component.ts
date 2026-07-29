@@ -219,6 +219,29 @@ import { Customer, Payment } from '../../models/customer.model';
       }
     }
 
+    @media (max-width: 640px) {
+      .detail-stats-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .info-strip {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .customer-title-block {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .payments-section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+    }
+
     .d-card {
       background: rgba(15, 23, 42, 0.5);
       border: 1px solid var(--border-color);

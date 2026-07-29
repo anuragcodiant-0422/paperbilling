@@ -204,6 +204,38 @@ import { Customer, Payment } from '../../models/customer.model';
       gap: 1.5rem;
     }
 
+    @media (max-width: 640px) {
+      .receipt-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .receipt-badge-wrap {
+        align-items: flex-start;
+      }
+
+      .receipt-info-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+      }
+
+      .amount-banner {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+
+      .modal-footer {
+        flex-direction: column;
+      }
+
+      .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
     .info-label {
       font-size: 0.6875rem;
       font-weight: 700;

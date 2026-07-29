@@ -14,21 +14,14 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
       <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div class="header-title-group">
-            <h2 class="modal-title">Record Payment</h2>
-            <p class="header-subtitle">Log a new payment for <strong>{{ customer()?.name }}</strong></p>
+            
+          
           </div>
           <button class="modal-close" (click)="onClose()">&times;</button>
         </div>
 
-        <!-- Customer Summary Banner -->
-        @if (customer(); as cust) {
-          <div class="customer-pay-banner">
-            <div class="banner-item">
-              <span class="b-label">Total Payments Made</span>
-              <span class="b-val text-success">\${{ cust.totalPaid | number:'1.2-2' }}</span>
-            </div>
-          </div>
-        }
+    
+       
 
         <form (ngSubmit)="onSubmit()">
           <div class="modal-body">

@@ -72,12 +72,12 @@ import { Payment } from '../../models/customer.model';
           <div class="stat-box qr-stat-box">
             <span class="sb-label">Scan QR Code to Pay</span>
             <div class="qr-card-content">
-              <img src="/Image.png" alt="Payment QR Code" class="qr-card-thumb" (click)="showQrModal.set(true)" title="Click to Expand QR" />
+              <img src="/qrcode.jpg" alt="Payment QR Code" class="qr-card-thumb" (click)="showQrModal.set(true)" title="Click to Expand QR" />
               <div class="qr-card-actions">
                 <button class="btn btn-primary btn-xs" (click)="showQrModal.set(true)">
                   🔍 View QR
                 </button>
-                <a href="/Image.png" download="Payment_QR_Code.png" class="btn btn-success btn-xs">
+                <a href="/qrcode.jpg" download="Payment_QR_Code.png" class="btn btn-success btn-xs">
                   ⬇️ Download
                 </a>
               </div>
@@ -225,7 +225,7 @@ import { Payment } from '../../models/customer.model';
 
               <div class="qr-modal-body">
                 <div class="qr-img-wrapper">
-                  <img src="/Image.png" alt="Payment QR Code" class="qr-modal-img" />
+                  <img src="/qrcode.jpg" alt="Payment QR Code" class="qr-modal-img" />
                 </div>
                 <p class="qr-instruction">
                   Scan this QR code using GPay, PhonePe, Paytm, BHIM, or any UPI app to complete your payment, then click <strong>Log Payment Transaction</strong> to record it.
@@ -236,7 +236,7 @@ import { Payment } from '../../models/customer.model';
                 <button class="btn btn-success" (click)="showQrModal.set(false); openAddPayment.emit()">
                   Log Payment Transaction
                 </button>
-                <a href="/Image.png" download="Payment_QR_Code.png" class="btn btn-outline-success">
+                <a href="/qrcode.jpg" download="Payment_QR_Code.png" class="btn btn-outline-success">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>

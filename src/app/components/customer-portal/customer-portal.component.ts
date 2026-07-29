@@ -1,6 +1,7 @@
 import { Component, inject, computed, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { GooglePayButtonModule } from '@google-pay/button-angular';
 import { AuthService } from '../../services/auth.service';
 import { CustomerService } from '../../services/customer.service';
 import { Payment } from '../../models/customer.model';
@@ -8,7 +9,7 @@ import { Payment } from '../../models/customer.model';
 @Component({
   selector: 'app-customer-portal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GooglePayButtonModule],
   template: `
     <div class="customer-portal-container">
       @if (customer(); as cust) {
@@ -51,6 +52,29 @@ import { Payment } from '../../models/customer.model';
             <span class="sb-label">Latest Payment Date</span>
             <div class="sb-val text-date">{{ payments().length > 0 ? payments()[0].paymentDate : 'N/A' }}</div>
             <span class="sb-hint">Most recent payment date</span>
+          </div>
+
+          <div class="stat-box gpay-stat-box">
+            <span class="sb-label">Express Google Pay</span>
+            <div class="gpay-card-content">
+              <google-pay-button
+                environment="TEST"
+                buttonColor="black"
+                buttonType="pay"
+                buttonSizeMode="fill"
+                [paymentRequest]="paymentRequest"
+                (loadpaymentdata)="onGooglePaySuccess($event)"
+                (error)="onGooglePayError($event)"
+              ></google-pay-button>
+              <button class="btn btn-gpay-app" (click)="openGooglePayApp(100)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+                Open GPay App 📲
+              </button>
+              <span class="gpay-sub">Web checkout or direct mobile app redirect</span>
+            </div>
           </div>
 
           <div class="stat-box qr-stat-box">
@@ -353,6 +377,51 @@ import { Payment } from '../../models/customer.model';
       font-size: 0.75rem;
       color: var(--text-dim);
       margin-top: 0.35rem;
+    }
+
+    .gpay-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.4rem;
+      width: 100%;
+    }
+
+    .gpay-sub {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    google-pay-button {
+      width: 100%;
+      height: 40px;
+      display: block;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .btn-gpay-app {
+      width: 100%;
+      background: linear-gradient(135deg, #1a73e8, #1557b0);
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: var(--transition);
+
+      &:hover {
+        background: linear-gradient(135deg, #1557b0, #0d47a1);
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+      }
     }
 
     .badge-row {
@@ -914,6 +983,93 @@ export class CustomerPortalComponent {
     const all = this.customerService.customers();
     return all.find(c => c.email.toLowerCase() === user.email.toLowerCase());
   });
+
+  paymentRequest: any = {
+    apiVersion: 2,
+    apiVersionMinor: 0,
+    allowedPaymentMethods: [
+      {
+        type: 'CARD',
+        parameters: {
+          allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+          allowedCardNetworks: ['AMEX', 'DISCOVER', 'INTERAC', 'JCB', 'MASTERCARD', 'VISA']
+        },
+        tokenizationSpecification: {
+          type: 'PAYMENT_GATEWAY',
+          parameters: {
+            gateway: 'example',
+            gatewayMerchantId: 'exampleGatewayMerchantId'
+          }
+        }
+      }
+    ],
+    merchantInfo: {
+      merchantId: '12345678901234567890',
+      merchantName: 'PaperBilling Suite'
+    },
+    transactionInfo: {
+      totalPriceStatus: 'FINAL',
+      totalPriceLabel: 'Total',
+      totalPrice: '100.00',
+      currencyCode: 'USD',
+      countryCode: 'US'
+    }
+  };
+
+  onGooglePaySuccess(event: any): void {
+    const cust = this.customer();
+    if (!cust) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const txnId = 'GPAY-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+
+    this.customerService.addPayment({
+      customerId: cust.id,
+      amount: 100,
+      paymentDate: today,
+      paymentMethod: 'Google Pay',
+      referenceNumber: txnId,
+      status: 'Complete',
+      notes: 'Instant 1-click checkout via Google Pay'
+    });
+
+    alert(`🎉 Google Pay Payment Successful!\nTransaction ID: ${txnId}\nAmount: $100.00`);
+  }
+
+  onGooglePayError(error: any): void {
+    console.error('Google Pay Error:', error);
+  }
+
+  openGooglePayApp(amount: number = 100): void {
+    const cust = this.customer();
+    const upiVpa = 'paperbilling@upi';
+    const merchantName = encodeURIComponent('PaperBilling Suite');
+    const note = encodeURIComponent(`Bill Payment for ${cust?.name || 'Customer'}`);
+
+    const gpayIntentUrl = `intent://pay?pa=${upiVpa}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end;`;
+    const standardUpiUrl = `upi://pay?pa=${upiVpa}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}`;
+
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    window.location.href = isAndroid ? gpayIntentUrl : standardUpiUrl;
+
+    setTimeout(() => {
+      if (confirm('Did your Google Pay app payment complete successfully?')) {
+        const today = new Date().toISOString().split('T')[0];
+        const txnId = 'GPAY-APP-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+
+        this.customerService.addPayment({
+          customerId: cust?.id || '',
+          amount: amount,
+          paymentDate: today,
+          paymentMethod: 'Google Pay',
+          referenceNumber: txnId,
+          status: 'Complete',
+          notes: 'Payment completed via Google Pay App'
+        });
+      }
+    }, 2500);
+  }
 
   datePreset = signal<string>('all');
   startDate = signal<string>('');

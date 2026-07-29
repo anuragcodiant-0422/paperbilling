@@ -41,14 +41,19 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
                   <p class="qr-helper-sub">Scan using GPay, PhonePe, Paytm, or UPI</p>
                 </div>
               </div>
-              <a href="/Image.png" download="Payment_QR_Code.png" class="btn-qr-dl" title="Download QR Image">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Download QR
-              </a>
+              <div class="qr-helper-actions">
+                <button type="button" class="btn-gpay-app-sm" (click)="openGooglePayApp()" title="Redirect directly to Google Pay App">
+                  📲 Open GPay App
+                </button>
+                <a href="/Image.png" download="Payment_QR_Code.png" class="btn-qr-dl" title="Download QR Image">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  Download QR
+                </a>
+              </div>
             </div>
 
             <div class="form-row">
@@ -87,6 +92,7 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
                 <select class="form-control" [(ngModel)]="paymentMethod" name="paymentMethod">
                   <option value="Credit Card">Credit Card</option>
                   <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Google Pay">Google Pay</option>
                   <option value="Cash">Cash</option>
                   <option value="UPI / PayPal">UPI / PayPal</option>
                   <option value="Check">Check</option>
@@ -352,6 +358,33 @@ import { Customer, PaymentMethod, PaymentStatus } from '../../models/customer.mo
       font-size: 0.75rem;
       color: var(--text-muted);
       margin: 0;
+    }
+
+    .qr-helper-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-gpay-app-sm {
+      background: linear-gradient(135deg, #1a73e8, #1557b0);
+      color: #ffffff;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: linear-gradient(135deg, #1557b0, #0d47a1);
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+      }
     }
 
     .btn-qr-dl {
@@ -679,6 +712,25 @@ export class AddPaymentModalComponent {
 
   removeScreenshot(): void {
     this.screenshotUrl.set('');
+  }
+
+  openGooglePayApp(): void {
+    const cust = this.customer();
+    const payAmt = this.amount || 100;
+    const upiVpa = 'paperbilling@upi';
+    const merchantName = encodeURIComponent('PaperBilling Suite');
+    const note = encodeURIComponent(`Bill Payment for ${cust?.name || 'Customer'}`);
+
+    const gpayIntentUrl = `intent://pay?pa=${upiVpa}&pn=${merchantName}&am=${payAmt}&cu=INR&tn=${note}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end;`;
+    const standardUpiUrl = `upi://pay?pa=${upiVpa}&pn=${merchantName}&am=${payAmt}&cu=INR&tn=${note}`;
+
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    window.location.href = isAndroid ? gpayIntentUrl : standardUpiUrl;
+
+    this.paymentMethod = 'Google Pay';
+    if (!this.notes) {
+      this.notes = 'Payment redirected to Google Pay app';
+    }
   }
 
   onSubmit(): void {

@@ -1,4 +1,4 @@
-export type PaymentMethod = 'Credit Card' | 'Bank Transfer' | 'Cash' | 'UPI / PayPal' | 'Check';
+export type PaymentMethod = 'Credit Card' | 'Bank Transfer' | 'Cash' | 'UPI / PayPal' | 'Check' | 'Google Pay';
 export type PaymentStatus = 'Pending' | 'Complete' | 'Cancel';
 export type CustomerStatus = 'Active' | 'Inactive';
 

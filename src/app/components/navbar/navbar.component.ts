@@ -53,7 +53,7 @@ import { AuthService } from '../../services/auth.service';
         <div class="nav-actions">
           @if (auth.isLoggedIn(); as user) {
             <div class="user-profile-badge">
-              <div class="user-avatar">
+              <div class="user-avatar" [title]="auth.currentUser()?.name || ''">
                 {{ getInitials(auth.currentUser()?.name || '') }}
               </div>
               <div class="user-info">
@@ -65,18 +65,19 @@ import { AuthService } from '../../services/auth.service';
             </div>
 
             @if (auth.isAdmin()) {
-              <button class="btn btn-primary btn-sm" (click)="openAddCustomerModal.emit()">
-                + Add Customer
+              <button class="btn btn-primary btn-sm btn-add-cust" (click)="openAddCustomerModal.emit()">
+                <span class="btn-icon-plus">+</span>
+                <span class="btn-label-cust">Add Customer</span>
               </button>
             }
 
-            <button class="btn btn-secondary btn-sm" (click)="auth.logout()" title="Sign Out">
+            <button class="btn btn-secondary btn-sm btn-signout" (click)="auth.logout()" title="Sign Out">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16 17 21 12 16 7"></polyline>
                 <line x1="21" y1="12" x2="9" y2="12"></line>
               </svg>
-              Sign Out
+              <span class="signout-text">Sign Out</span>
             </button>
           }
         </div>
@@ -238,15 +239,19 @@ import { AuthService } from '../../services/auth.service';
 
     @media (max-width: 640px) {
       .navbar {
-        padding: 0.6rem 0;
+        padding: 0.5rem 0;
       }
 
       .navbar-container {
+        gap: 0.35rem;
+      }
+
+      .brand {
         gap: 0.5rem;
       }
 
       .brand-name {
-        font-size: 1.05rem;
+        font-size: 1rem;
       }
 
       .brand-tag {
@@ -254,8 +259,8 @@ import { AuthService } from '../../services/auth.service';
       }
 
       .brand-icon {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
       }
 
       .user-info {
@@ -263,13 +268,41 @@ import { AuthService } from '../../services/auth.service';
       }
 
       .user-profile-badge {
-        padding: 0.2rem;
+        padding: 0;
         background: transparent;
         border: none;
       }
 
       .nav-actions {
-        gap: 0.4rem;
+        gap: 0.35rem;
+        flex-shrink: 0;
+      }
+
+      .btn-add-cust, .btn-signout {
+        padding: 0.35rem 0.55rem;
+        font-size: 0.775rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .brand-tag {
+        display: none;
+      }
+
+      .btn-label-cust {
+        display: none;
+      }
+
+      .signout-text {
+        display: none;
+      }
+
+      .btn-signout {
+        padding: 0.4rem;
+      }
+
+      .btn-add-cust {
+        padding: 0.4rem 0.6rem;
       }
     }
   `]

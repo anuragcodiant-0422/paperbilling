@@ -57,21 +57,13 @@ import { Payment } from '../../models/customer.model';
           <div class="stat-box gpay-stat-box">
             <span class="sb-label">Express Google Pay</span>
             <div class="gpay-card-content">
-              <google-pay-button
-                environment="TEST"
-                buttonColor="black"
-                buttonType="pay"
-                buttonSizeMode="fill"
-                [paymentRequest]="paymentRequest"
-                (loadpaymentdata)="onGooglePaySuccess($event)"
-                (error)="onGooglePayError($event)"
-              ></google-pay-button>
+             
               <button class="btn btn-gpay-app" (click)="openGooglePayApp()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
                   <line x1="12" y1="18" x2="12.01" y2="18"></line>
                 </svg>
-                Open GPay App 📲
+                Open GPay App 
               </button>
               <span class="gpay-sub">Web checkout or direct mobile app redirect</span>
             </div>

@@ -233,6 +233,9 @@ import { Payment } from '../../models/customer.model';
               </div>
 
               <div class="qr-modal-footer">
+                <button class="btn btn-success" (click)="showQrModal.set(false); openAddPayment.emit()">
+                  Log Payment Transaction
+                </button>
                 <a href="/Image.png" download="Payment_QR_Code.png" class="btn btn-outline-success">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -241,8 +244,8 @@ import { Payment } from '../../models/customer.model';
                   </svg>
                   Download QR Code
                 </a>
-                <button class="btn btn-success" (click)="showQrModal.set(false); openAddPayment.emit()">
-                  Log Payment Transaction
+                <button class="btn btn-secondary btn-close-modal" (click)="showQrModal.set(false)">
+                  ✕ Close Window
                 </button>
               </div>
             </div>
@@ -760,80 +763,95 @@ import { Payment } from '../../models/customer.model';
       border: 1px solid var(--border-highlight);
       border-radius: var(--radius-lg);
       width: 100%;
-      max-width: 520px;
-      overflow: hidden;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       box-shadow: var(--shadow-modal);
       animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .qr-modal-header {
-      padding: 1.25rem 1.5rem;
+      padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       background: rgba(255, 255, 255, 0.02);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .qr-modal-title {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 800;
       color: var(--text-main);
       margin: 0;
     }
 
     .qr-modal-sub {
-      font-size: 0.8rem;
+      font-size: 0.775rem;
       color: var(--text-muted);
       margin-top: 0.2rem;
     }
 
     .qr-modal-close {
-      background: transparent;
+      background: rgba(255, 255, 255, 0.1);
       border: none;
-      color: var(--text-muted);
+      color: var(--text-main);
       font-size: 1.5rem;
       cursor: pointer;
       line-height: 1;
-      padding: 0.2rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.25);
+        color: #ef4444;
+      }
     }
 
     .qr-modal-body {
-      padding: 1.75rem 1.5rem;
+      padding: 1.25rem;
       text-align: center;
+      flex: 1;
     }
 
     .qr-img-wrapper {
       background: #ffffff;
-      padding: 1.25rem;
-      border-radius: 16px;
+      padding: 1rem;
+      border-radius: 12px;
       display: inline-block;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
       max-width: 100%;
     }
 
     .qr-modal-img {
-      width: 340px;
-      height: 420px;
+      width: auto;
       max-width: 100%;
+      max-height: 220px;
       object-fit: contain;
       display: block;
+      margin: 0 auto;
     }
 
     .qr-instruction {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
-      margin-top: 1rem;
-      line-height: 1.4;
+      margin-top: 0.75rem;
+      line-height: 1.35;
     }
 
     .qr-modal-footer {
-      padding: 1rem 1.5rem;
-      background: rgba(15, 23, 42, 0.4);
+      padding: 1rem 1.25rem;
+      background: rgba(15, 23, 42, 0.6);
       border-top: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
 
     .btn-outline-success {

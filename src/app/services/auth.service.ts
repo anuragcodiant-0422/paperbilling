@@ -2,6 +2,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { AuthUser } from '../models/user.model';
 import { CustomerService } from './customer.service';
 import { FirebaseService } from './firebase.service';
+import { AppNotification } from '../models/customer.model';
 
 @Injectable({
   providedIn: 'root'
@@ -150,6 +151,20 @@ export class AuthService {
       totalBilled: 2000,
       status: 'Active'
     });
+
+    // 3. Save Admin Notification to Firebase
+    const notif: AppNotification = {
+      id: `notif-${Date.now()}`,
+      type: 'NEW_REGISTRATION',
+      title: '👤 New Customer Registered',
+      message: `${data.name.trim()} (${data.email.trim()}) registered a new customer account. Phone: ${data.phone.trim() || 'N/A'}`,
+      customerName: data.name.trim(),
+      customerEmail: data.email.trim(),
+      customerPhone: data.phone.trim() || 'N/A',
+      createdAt: new Date().toISOString(),
+      read: false
+    };
+    await this.firebaseService.saveNotification(notif);
 
     return {
       success: true,

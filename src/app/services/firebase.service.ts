@@ -12,7 +12,7 @@ import {
 import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs, Firestore } from 'firebase/firestore';
 import { getDatabase, ref, set, get, remove, Database } from 'firebase/database';
 import { environment } from '../environments/environment';
-import { Customer, Payment } from '../models/customer.model';
+import { AppNotification, Customer, Enquiry, EnquiryStatus, Payment } from '../models/customer.model';
 
 @Injectable({
   providedIn: 'root'
@@ -248,6 +248,207 @@ export class FirebaseService {
     if (this.rtdb) {
       try {
         await remove(ref(this.rtdb, `payments/${paymentId}`));
+      } catch (e) {}
+    }
+  }
+
+  // --- Notifications Firebase API ---
+  async saveNotification(notif: AppNotification): Promise<void> {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return;
+
+    if (this.db) {
+      try {
+        const notifDocRef = doc(this.db, 'notifications', notif.id);
+        await setDoc(notifDocRef, { ...notif }, { merge: true });
+      } catch (err) {
+        console.warn('Firestore notification save notice:', err);
+      }
+    }
+
+    if (this.rtdb) {
+      try {
+        const notifRtRef = ref(this.rtdb, `notifications/${notif.id}`);
+        await set(notifRtRef, { ...notif });
+      } catch (err) {
+        console.warn('Realtime DB notification save notice:', err);
+      }
+    }
+  }
+
+  async fetchNotificationsFromFirebase(): Promise<AppNotification[]> {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return [];
+
+    const list: AppNotification[] = [];
+
+    if (this.db) {
+      try {
+        const querySnapshot = await getDocs(collection(this.db, 'notifications'));
+        querySnapshot.forEach((docSnap: any) => {
+          if (docSnap.exists()) {
+            list.push(docSnap.data() as AppNotification);
+          }
+        });
+        if (list.length > 0) {
+          return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+      } catch (e) {
+        console.warn('Firestore notifications fetch notice:', e);
+      }
+    }
+
+    if (this.rtdb) {
+      try {
+        const snapshot = await get(ref(this.rtdb, 'notifications'));
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          Object.keys(val).forEach(key => {
+            list.push(val[key]);
+          });
+        }
+      } catch (e) {
+        console.warn('Realtime DB notifications fetch notice:', e);
+      }
+    }
+
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  listenNotificationsFromFirebase(callback: (notifications: AppNotification[]) => void): () => void {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return () => {};
+
+    // Periodic sync interval for live real-time notifications
+    const interval = setInterval(async () => {
+      const list = await this.fetchNotificationsFromFirebase();
+      callback(list);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }
+
+  async markNotificationAsReadInFirebase(id: string): Promise<void> {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return;
+
+    if (this.db) {
+      try {
+        const notifDocRef = doc(this.db, 'notifications', id);
+        await setDoc(notifDocRef, { read: true }, { merge: true });
+      } catch (e) {}
+    }
+    if (this.rtdb) {
+      try {
+        await set(ref(this.rtdb, `notifications/${id}/read`), true);
+      } catch (e) {}
+    }
+  }
+
+  async clearAllNotificationsFromFirebase(): Promise<void> {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return;
+
+    const firestoreDb = this.db;
+    if (firestoreDb) {
+      try {
+        const querySnapshot = await getDocs(collection(firestoreDb, 'notifications'));
+        querySnapshot.forEach(async (docSnap: any) => {
+          await deleteDoc(doc(firestoreDb, 'notifications', docSnap.id));
+        });
+      } catch (e) {}
+    }
+    if (this.rtdb) {
+      try {
+        await remove(ref(this.rtdb, 'notifications'));
+      } catch (e) {}
+    }
+  }
+
+  // --- Enquiries Firebase Collection API ---
+  async saveEnquiry(enquiry: Enquiry): Promise<void> {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return;
+
+    if (this.db) {
+      try {
+        const enqDocRef = doc(this.db, 'enquiries', enquiry.id);
+        await setDoc(enqDocRef, { ...enquiry }, { merge: true });
+      } catch (err) {
+        console.warn('Firestore enquiry save notice:', err);
+      }
+    }
+
+    if (this.rtdb) {
+      try {
+        const enqRtRef = ref(this.rtdb, `enquiries/${enquiry.id}`);
+        await set(enqRtRef, { ...enquiry });
+      } catch (err) {
+        console.warn('Realtime DB enquiry save notice:', err);
+      }
+    }
+  }
+
+  async fetchEnquiriesFromFirebase(): Promise<Enquiry[]> {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return [];
+
+    const list: Enquiry[] = [];
+
+    if (this.db) {
+      try {
+        const querySnapshot = await getDocs(collection(this.db, 'enquiries'));
+        querySnapshot.forEach((docSnap: any) => {
+          if (docSnap.exists()) {
+            list.push(docSnap.data() as Enquiry);
+          }
+        });
+        if (list.length > 0) {
+          return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+      } catch (e) {
+        console.warn('Firestore enquiries fetch notice:', e);
+      }
+    }
+
+    if (this.rtdb) {
+      try {
+        const snapshot = await get(ref(this.rtdb, 'enquiries'));
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          Object.keys(val).forEach(key => {
+            list.push(val[key]);
+          });
+        }
+      } catch (e) {
+        console.warn('Realtime DB enquiries fetch notice:', e);
+      }
+    }
+
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async updateEnquiryStatusInFirebase(id: string, status: EnquiryStatus): Promise<void> {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return;
+
+    if (this.db) {
+      try {
+        const enqDocRef = doc(this.db, 'enquiries', id);
+        await setDoc(enqDocRef, { status }, { merge: true });
+      } catch (e) {}
+    }
+    if (this.rtdb) {
+      try {
+        await set(ref(this.rtdb, `enquiries/${id}/status`), status);
+      } catch (e) {}
+    }
+  }
+
+  async deleteEnquiryFromFirebase(id: string): Promise<void> {
+    if (!this.isBrowser() || !this.isFirebaseInitialized) return;
+
+    const firestoreDb = this.db;
+    if (firestoreDb) {
+      try {
+        await deleteDoc(doc(firestoreDb, 'enquiries', id));
+      } catch (e) {}
+    }
+    if (this.rtdb) {
+      try {
+        await remove(ref(this.rtdb, `enquiries/${id}`));
       } catch (e) {}
     }
   }

@@ -2,6 +2,7 @@
   <!-- Top Navigation Header -->
   <app-navbar
     (openAddCustomerModal)="openAddCustomerModal()"
+    (openContactModal)="openContactModal()"
   ></app-navbar>
 
   <!-- Main Content View Container -->
@@ -62,6 +63,20 @@
                   </svg>
                   All Payments List
                 </button>
+                <button
+                  class="toggle-btn"
+                  [class.active]="adminViewMode() === 'enquiries'"
+                  (click)="adminViewMode.set('enquiries')"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                  Enquiries List
+                  @if (enquiryService.newCount() > 0) {
+                    <span class="enq-badge-count">{{ enquiryService.newCount() }}</span>
+                  }
+                </button>
               </div>
             </div>
           </div>
@@ -72,11 +87,13 @@
               (recordPaymentFor)="openAddPayment($event)"
               (openAddCustomerModal)="openAddCustomerModal()"
             ></app-customer-list>
-          } @else {
+          } @else if (adminViewMode() === 'payments') {
             <app-all-payments-list
               (viewReceipt)="openReceipt($event)"
               (selectCustomer)="openCustomerDetail($event)"
             ></app-all-payments-list>
+          } @else {
+            <app-enquiries-list></app-enquiries-list>
           }
         }
       }
@@ -89,6 +106,12 @@
       (close)="closeAddCustomerModal()"
       (customerAdded)="onCustomerAdded($event)"
     ></app-add-customer-modal>
+  }
+
+  @if (isContactModalOpen()) {
+    <app-contact-modal
+      (close)="closeContactModal()"
+    ></app-contact-modal>
   }
 
   @if (customerForPayment(); as custForPay) {

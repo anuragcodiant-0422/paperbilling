@@ -9,10 +9,13 @@ import { PaymentReceiptModalComponent } from './components/payment-receipt-modal
 import { AuthComponent } from './components/auth/auth.component';
 import { CustomerPortalComponent } from './components/customer-portal/customer-portal.component';
 import { AllPaymentsListComponent } from './components/all-payments-list/all-payments-list.component';
+import { ContactModalComponent } from './components/contact-modal/contact-modal.component';
+import { EnquiriesListComponent } from './components/enquiries-list/enquiries-list.component';
 
 import { Customer, Payment } from './models/customer.model';
 import { CustomerService } from './services/customer.service';
 import { AuthService } from './services/auth.service';
+import { EnquiryService } from './services/enquiry.service';
 
 @Component({
   selector: 'app-root',
@@ -27,7 +30,9 @@ import { AuthService } from './services/auth.service';
     PaymentReceiptModalComponent,
     AuthComponent,
     CustomerPortalComponent,
-    AllPaymentsListComponent
+    AllPaymentsListComponent,
+    ContactModalComponent,
+    EnquiriesListComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
@@ -35,12 +40,22 @@ import { AuthService } from './services/auth.service';
 export class App {
   private customerService = inject(CustomerService);
   auth = inject(AuthService);
+  enquiryService = inject(EnquiryService);
 
-  adminViewMode = signal<'customers' | 'payments'>('customers');
+  adminViewMode = signal<'customers' | 'payments' | 'enquiries'>('customers');
   isAddCustomerOpen = signal<boolean>(false);
+  isContactModalOpen = signal<boolean>(false);
   selectedCustomer = signal<Customer | undefined>(undefined);
   customerForPayment = signal<Customer | undefined>(undefined);
   activeReceipt = signal<{ customer?: Customer; payment?: Payment } | undefined>(undefined);
+
+  openContactModal(): void {
+    this.isContactModalOpen.set(true);
+  }
+
+  closeContactModal(): void {
+    this.isContactModalOpen.set(false);
+  }
 
   openAddCustomerModal(): void {
     this.isAddCustomerOpen.set(true);

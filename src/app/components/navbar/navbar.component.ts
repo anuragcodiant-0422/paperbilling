@@ -1,7 +1,8 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CustomerService } from '../../services/customer.service';
 import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-navbar',
@@ -65,6 +66,59 @@ import { AuthService } from '../../services/auth.service';
             </div>
 
             @if (auth.isAdmin()) {
+              <!-- Admin Firebase Notifications Bell 🔔 -->
+              <div class="notif-wrapper">
+                <button class="notif-btn" (click)="toggleNotifDropdown($event)" title="Firebase Live Registration Notifications">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                  @if (notifService.unreadCount() > 0) {
+                    <span class="notif-badge">{{ notifService.unreadCount() }}</span>
+                  }
+                </button>
+
+                @if (showNotifDropdown()) {
+                  <div class="notif-dropdown" (click)="$event.stopPropagation()">
+                    <div class="notif-header">
+                      <div class="notif-title-wrap">
+                        <span class="notif-head-title">Admin Notifications</span>
+                        <span class="notif-head-tag">Firebase Realtime</span>
+                      </div>
+                      @if (notifService.notifications().length > 0) {
+                        <button class="btn-clear-notif" (click)="notifService.clearAll()">Clear All</button>
+                      }
+                    </div>
+
+                    <div class="notif-list">
+                      @if (notifService.notifications().length === 0) {
+                        <div class="notif-empty">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                          </svg>
+                          <p>No new notifications</p>
+                        </div>
+                      } @else {
+                        @for (item of notifService.notifications(); track item.id) {
+                          <div class="notif-item" [class.unread]="!item.read" (click)="notifService.markAsRead(item.id)">
+                            <div class="notif-item-icon">👤</div>
+                            <div class="notif-item-body">
+                              <div class="notif-item-title">{{ item.title }}</div>
+                              <div class="notif-item-msg">{{ item.message }}</div>
+                              <div class="notif-item-time">{{ formatTime(item.createdAt) }}</div>
+                            </div>
+                            @if (!item.read) {
+                              <span class="unread-dot" title="Unread Alert"></span>
+                            }
+                          </div>
+                        }
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+
               <button class="btn btn-primary btn-sm btn-add-cust" (click)="openAddCustomerModal.emit()">
                 <span class="btn-icon-plus">+</span>
                 <span class="btn-label-cust">Add Customer</span>
@@ -79,9 +133,31 @@ import { AuthService } from '../../services/auth.service';
               </svg>
               <span class="signout-text">Sign Out</span>
             </button>
+          } @else {
+            <!-- Contact Us Button (Visible ONLY outside login page when logged out) -->
+            <button class="btn btn-outline-contact" (click)="openContactModal.emit()" title="Contact Support & Business Info">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+              <span class="contact-btn-label">Contact Us</span>
+            </button>
           }
         </div>
       </div>
+
+      <!-- Live Floating Registration Toast Alert Banner -->
+      @if (auth.isAdmin() && notifService.toastNotification(); as toast) {
+        <div class="toast-banner-wrapper">
+          <div class="toast-banner">
+            <div class="toast-icon">👤</div>
+            <div class="toast-content">
+              <span class="toast-title">New User Registration Saved in Firebase!</span>
+              <span class="toast-sub"><strong>{{ toast.customerName }}</strong> ({{ toast.customerEmail }}) • Tel: {{ toast.customerPhone }}</span>
+            </div>
+            <button class="toast-close" (click)="notifService.closeToast()">&times;</button>
+          </div>
+        </div>
+      }
     </header>
   `,
   styles: [`
@@ -284,36 +360,251 @@ import { AuthService } from '../../services/auth.service';
       }
     }
 
-    @media (max-width: 480px) {
-      .brand-tag {
-        display: none;
-      }
+    .notif-wrapper {
+      position: relative;
+    }
 
-      .btn-label-cust {
-        display: none;
-      }
+    .notif-btn {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
 
-      .signout-text {
-        display: none;
+      &:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: #6366f1;
+        color: #818cf8;
       }
+    }
 
-      .btn-signout {
-        padding: 0.4rem;
-      }
+    .notif-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    }
 
-      .btn-add-cust {
-        padding: 0.4rem 0.6rem;
+    .notif-dropdown {
+      position: absolute;
+      top: 45px;
+      right: 0;
+      width: 320px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-modal);
+      z-index: 1000;
+      overflow: hidden;
+      animation: slideUp 0.2s ease-out;
+    }
+
+    .notif-header {
+      padding: 0.75rem 1rem;
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .notif-head-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .notif-head-tag {
+      font-size: 0.65rem;
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      margin-left: 0.4rem;
+    }
+
+    .btn-clear-notif {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.725rem;
+      cursor: pointer;
+
+      &:hover { color: #f87171; }
+    }
+
+    .notif-list {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .notif-empty {
+      padding: 2rem 1rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .notif-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      position: relative;
+
+      &:hover { background: rgba(255, 255, 255, 0.03); }
+      &.unread { background: rgba(99, 102, 241, 0.08); }
+    }
+
+    .notif-item-icon {
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0.25rem;
+      background: rgba(99, 102, 241, 0.15);
+      border-radius: 6px;
+    }
+
+    .notif-item-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .notif-item-msg {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+      line-height: 1.3;
+    }
+
+    .notif-item-time {
+      font-size: 0.675rem;
+      color: var(--text-dim);
+      margin-top: 0.25rem;
+    }
+
+    .unread-dot {
+      width: 8px;
+      height: 8px;
+      background: #3b82f6;
+      border-radius: 50%;
+      margin-top: 0.2rem;
+      flex-shrink: 0;
+    }
+
+    .toast-banner-wrapper {
+      position: fixed;
+      top: 75px;
+      right: 20px;
+      z-index: 1100;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .toast-banner {
+      background: #0f172a;
+      border: 1px solid #6366f1;
+      border-left: 4px solid #10b981;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      max-width: 380px;
+    }
+
+    .toast-icon { font-size: 1.25rem; }
+
+    .toast-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .toast-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #34d399;
+    }
+
+    .toast-sub {
+      font-size: 0.725rem;
+      color: var(--text-main);
+      margin-top: 0.15rem;
+    }
+
+    .btn-outline-contact {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-md);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.3);
+        border-color: #818cf8;
+        color: #ffffff;
       }
+    }
+
+    .toast-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 0.2rem;
+
+      &:hover { color: #ffffff; }
     }
   `]
 })
 export class NavbarComponent {
   customerService = inject(CustomerService);
   auth = inject(AuthService);
+  notifService = inject(NotificationService);
 
   readonly summary = this.customerService.financialSummary;
+  showNotifDropdown = signal<boolean>(false);
 
   openAddCustomerModal = output<void>();
+  openContactModal = output<void>();
+
+  toggleNotifDropdown(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.showNotifDropdown.update(val => !val);
+  }
 
   getInitials(name: string): string {
     if (!name) return '?';
@@ -323,5 +614,15 @@ export class NavbarComponent {
       .join('')
       .toUpperCase()
       .substring(0, 2);
+  }
+
+  formatTime(isoStr: string): string {
+    if (!isoStr) return '';
+    try {
+      const date = new Date(isoStr);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' • ' + date.toLocaleDateString();
+    } catch (e) {
+      return isoStr;
+    }
   }
 }

@@ -346,9 +346,64 @@ import { EnquiryService } from '../../services/enquiry.service';
     .mt-3 { margin-top: 1rem; }
 
     @media (max-width: 768px) {
+      .contact-modal-card {
+        max-height: 90vh !important;
+        margin-bottom: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+      }
+
+      .contact-modal-body {
+        padding: 1rem !important;
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem)) !important;
+      }
+
       .contact-grid {
         grid-template-columns: 1fr !important;
-        gap: 1.25rem;
+        gap: 1rem !important;
+      }
+
+      .biz-info-card {
+        padding: 1rem !important;
+      }
+
+      .biz-brand-header {
+        margin-bottom: 0.85rem !important;
+        padding-bottom: 0.75rem !important;
+      }
+
+      .biz-info-list {
+        gap: 0.75rem !important;
+      }
+
+      .info-item {
+        gap: 0.6rem !important;
+      }
+
+      .priority-badge {
+        margin-top: 0.85rem !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.725rem !important;
+      }
+
+      .form-row {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+      }
+
+      .form-group {
+        margin-bottom: 0.75rem !important;
+      }
+
+      .form-control {
+        font-size: 16px !important; /* Prevents auto-zoom on iPhone Safari inputs */
+        padding: 0.65rem 0.85rem !important;
+      }
+
+      .btn-submit-contact {
+        min-height: 46px !important;
+        font-size: 1rem !important;
       }
     }
   `]

@@ -362,6 +362,10 @@ body {
     margin-bottom: 0.75rem !important;
   }
 
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
 }
 
 .enq-badge-count {
